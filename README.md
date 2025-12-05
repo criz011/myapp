@@ -1,6 +1,8 @@
 
 python -m venv venv
-.\venv\Scripts\activate   # Windows
+
+
+.\venv\Scripts\activate   
 
 
 python manage.py runserver
