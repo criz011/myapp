@@ -1,42 +1,58 @@
-import json
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
+# core_app/todo/controller.py
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from rest_framework import status
+
 from . import views as todo_service
+from .dataclass.todo_dto import TodoData
+from .serializer.response.todo_response import TodoResponseSerializer
+from .serializer.request.todo_create_request import TodoCreateRequestSerializer
+from .serializer.request.todo_update_request import TodoUpdateRequestSerializer
 
-
-@csrf_exempt
+@api_view(['GET', 'POST'])
 def todo_list(request):
-    if request.method == "GET":
+    if request.method == 'GET':
         todos = todo_service.list_todos()
-        return JsonResponse(todos, safe=False)
+        serializer = TodoResponseSerializer(todos, many=True)
+        return Response(serializer.data)
 
-    if request.method == "POST":
-        data = json.loads(request.body)
-        todo_id = todo_service.create_todo(data)
-        return JsonResponse({"id": todo_id, "message": "Created"}, status=201)
+    # POST
+    req_serializer = TodoCreateRequestSerializer(data=request.data)
+    if not req_serializer.is_valid():
+        return Response(req_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    return JsonResponse({"error": "Method not allowed"}, status=405)
+    todo_dto: TodoData = req_serializer.to_dataclass()
+    todo_id = todo_service.create_todo(todo_dto)
+    return Response({'id': todo_id, 'message': 'Created'}, status=status.HTTP_201_CREATED)
 
 
-@csrf_exempt
+@api_view(['GET', 'PUT', 'DELETE'])
 def todo_detail(request, id):
-    if request.method == "GET":
+    if request.method == 'GET':
         todo = todo_service.get_todo(id)
         if not todo:
-            return JsonResponse({"error": "Not found"}, status=404)
-        return JsonResponse(todo)
+            return Response({'error': 'Not found'}, status=status.HTTP_404_NOT_FOUND)
+        serializer = TodoResponseSerializer(todo)
+        return Response(serializer.data)
 
-    if request.method == "PUT":
-        data = json.loads(request.body)
-        updated = todo_service.update_todo(id, data)
-        if not updated:
-            return JsonResponse({"error": "Not found"}, status=404)
-        return JsonResponse({"message": "Updated"})
+    if request.method == 'PUT':
+        existing = todo_service.get_todo(id)
+        if not existing:
+            return Response({'error': 'Not found'}, status=status.HTTP_404_NOT_FOUND)
 
-    if request.method == "DELETE":
-        deleted = todo_service.delete_todo(id)
-        if not deleted:
-            return JsonResponse({"error": "Not found"}, status=404)
-        return JsonResponse({"message": "Deleted"})
+        req_serializer = TodoUpdateRequestSerializer(data=request.data, partial=True)
+        if not req_serializer.is_valid():
+            return Response(req_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    return JsonResponse({"error": "Method not allowed"}, status=405)
+        existing_dto = TodoData.from_dict(existing)
+        todo_dto = req_serializer.to_dataclass(existing_dto)
+        ok = todo_service.update_todo(id, todo_dto)
+        if not ok:
+            return Response({'error': 'Not found'}, status=status.HTTP_404_NOT_FOUND)
+        return Response({'message': 'Updated'})
+
+    # DELETE
+    deleted = todo_service.delete_todo(id)
+    if not deleted:
+        return Response({'error': 'Not found'}, status=status.HTTP_404_NOT_FOUND)
+    return Response({'message': 'Deleted'})

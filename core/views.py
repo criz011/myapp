@@ -1,4 +1,4 @@
-from django.http import HttpResponse
+from django.http import JsonResponse
 
-def home(request):
-    return HttpResponse("Todo API is running. Use /todo/ endpoints.")
+def ping(request):
+    return JsonResponse({"status": "ok"})
