@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'drf_spectacular',
     'core_app.todo.apps.TodoConfig',
     'rest_framework',
 ]
@@ -88,6 +89,8 @@ DATABASES = {
         'PORT': os.getenv('DB_PORT', '5432'),
     }
 }
+
+print("DEBUG: DB =", os.getenv('DB_NAME'), os.getenv('DB_USER'), os.getenv('DB_PASS'))
 
 
 

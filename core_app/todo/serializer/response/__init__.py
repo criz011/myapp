@@ -1,11 +1,7 @@
-from .create import TodoCreateResponseSerializer
-from .get import TodoGetResponseSerializer
-from .get_all import TodoListResponseSerializer
-from .update import TodoUpdateResponseSerializer
+from .todo import TodoResponseSerializer
+from .list import TodoListResponseSerializer
 
 __all__ = [
-    "TodoCreateResponseSerializer",
-    "TodoGetResponseSerializer",
+    "TodoResponseSerializer",
     "TodoListResponseSerializer",
-    "TodoUpdateResponseSerializer",
 ]
