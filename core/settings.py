@@ -90,9 +90,6 @@ DATABASES = {
     }
 }
 
-print("DEBUG: DB =", os.getenv('DB_NAME'), os.getenv('DB_USER'), os.getenv('DB_PASS'))
-
-
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
