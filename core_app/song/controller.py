@@ -2,33 +2,28 @@ from rest_framework.decorators import api_view
 from rest_framework.request import Request
 from rest_framework.response import Response
 
-from core_app.todo.views import TodoView
-from core_app.todo.serializer.request.create import TodoCreateRequestSerializer
-from core_app.todo.serializer.request.update import TodoUpdateRequestSerializer
+from core_app.song.views import SongView
+from core_app.song.serializer.request.create import SongCreateRequestSerializer
+from core_app.song.serializer.request.update import SongUpdateRequestSerializer
 from core_app.common.serializer.id_request import IdRequestSerializer
 
 
-class TodoController:
+class SongController:
 
-    view = TodoView()
+    view = SongView()
 
     @staticmethod
     @api_view(["POST"])
     def create(request: Request):
-        serializer = TodoCreateRequestSerializer(data=request.data)
+        serializer = SongCreateRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-
-        result = TodoController.view.create_todo(
-            serializer.validated_data
-        )
+        result = SongController.view.create_song(serializer.validated_data)
         return Response(result)
 
     @staticmethod
     @api_view(["GET"])
     def get_all(request: Request):
-        result = TodoController.view.get_todo(
-            params=request.query_params
-        )
+        result = SongController.view.get_song(params=request.query_params)
         return Response(result)
 
     @staticmethod
@@ -36,10 +31,7 @@ class TodoController:
     def get_one(request: Request):
         serializer = IdRequestSerializer(data=request.query_params)
         serializer.is_valid(raise_exception=True)
-
-        result = TodoController.view.get_todo(
-            serializer.validated_data["id"]
-        )
+        result = SongController.view.get_song(serializer.validated_data["id"])
         return Response(result)
 
     @staticmethod
@@ -48,10 +40,10 @@ class TodoController:
         id_serializer = IdRequestSerializer(data=request.data)
         id_serializer.is_valid(raise_exception=True)
 
-        serializer = TodoUpdateRequestSerializer(data=request.data)
+        serializer = SongUpdateRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        result = TodoController.view.update_todo(
+        result = SongController.view.update_song(
             id_serializer.validated_data["id"],
             serializer.validated_data
         )
@@ -62,8 +54,5 @@ class TodoController:
     def delete(request: Request):
         serializer = IdRequestSerializer(data=request.query_params)
         serializer.is_valid(raise_exception=True)
-
-        result = TodoController.view.delete_todo(
-            serializer.validated_data["id"]
-        )
+        result = SongController.view.delete_song(serializer.validated_data["id"])
         return Response(result)

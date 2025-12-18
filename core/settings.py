@@ -41,10 +41,14 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+
     'drf_spectacular',
-    'core_app.todo.apps.TodoConfig',
     'rest_framework',
+
+    'core_app.todo.apps.TodoConfig',
+    'core_app.song.apps.SongConfig',
 ]
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

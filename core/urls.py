@@ -6,4 +6,5 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('ping/', views.ping),
     path('todo/', include('core_app.todo.urls')),
+    path('song/', include('core_app.song.urls')),
 ]

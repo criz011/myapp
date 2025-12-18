@@ -1,10 +1,8 @@
 from typing import Optional
 
-from rest_framework import status
-
 from .model import Todo
 from .dataclass.todo_dto import TodoData
-from core_app.common.utils import ResponseUtils
+from core_app.common.utils import Utils
 
 
 class TodoView:
@@ -15,86 +13,84 @@ class TodoView:
     def create_todo(self, params):
         todo_data = TodoData(**params)
 
-        todo = Todo.objects.create(
-            title = todo_data.title,
-            description = todo_data.description,
-            completed = todo_data.completed
+        todo = Todo.create_todo(
+            title=todo_data.title,
+            description=todo_data.description,
+            completed=todo_data.completed
         )
 
-        return ResponseUtils.success(
+        return Utils.success_response(
             message=self.data_created,
-            data={
-                "id": todo.id,
-                "title": todo.title,
-                "description": todo.description,
-                "completed": todo.completed,
-            },
-            status_code=status.HTTP_201_CREATED
+            data=self._serialize_todo(todo)
         )
 
-    def get_todo(self, todo_id: Optional[int] = None):
+    def get_todo(self, todo_id: Optional[int] = None, params=None):
+        # -------- GET ONE --------
         if todo_id:
-            todos = Todo.objects.filter(id=todo_id)
-            if not todos.exists():
-                return ResponseUtils.error(
-                    message = f"Todo with id {todo_id} not found",
-                    status_code = status.HTTP_404_NOT_FOUND
+            todo = Todo.get_one(todo_id)
+            if not todo:
+                return Utils.error_response(
+                    message="Todo not found",
+                    error="INVALID_ID"
                 )
-        else:
-            todos = Todo.objects.all()
 
-        data = [
-            {
-                "id": t.id,
-                "title": t.title,
-                "description": t.description,
-                "completed": t.completed,
-            }
-            for t in todos
-        ]
+            return Utils.success_response(
+                message="Todo fetched successfully",
+                data=[self._serialize_todo(todo)]
+            )
 
-        return ResponseUtils.success(
+        # -------- GET ALL (PAGINATED) --------
+        todos = Todo.get_all(params)
+        data = [self._serialize_todo(t) for t in todos]
+
+        total = Todo.get_count()
+        page_num = int(params.get("page_num", 1)) if params else 1
+        limit = int(params.get("limit", 10)) if params else 10
+
+        return Utils.success_response(
             message="Todos fetched successfully",
             data=data,
-            status_code=status.HTTP_200_OK
+            meta={
+                "total": total,
+                "page_num": page_num,
+                "limit": limit
+            }
         )
 
     def update_todo(self, todo_id: int, params):
-        try:
-            todo = Todo.objects.get(id=todo_id)
-        except Todo.DoesNotExist:
-            return ResponseUtils.error(
-                message=f"Todo with id {todo_id} not found",
-                status_code=status.HTTP_404_NOT_FOUND
+        todo = Todo.update_todo(todo_id, **params)
+
+        if not todo:
+            return Utils.error_response(
+                message="Todo not found",
+                error="INVALID_ID"
             )
 
-        for key, value in params.items():
-            setattr(todo, key, value)
-
-        todo.save()
-
-        return ResponseUtils.success(
+        return Utils.success_response(
             message=self.data_updated,
-            data={
-                "id": todo.id,
-                "title": todo.title,
-                "description": todo.description,
-                "completed": todo.completed,
-            },
-            status_code=status.HTTP_200_OK
+            data=self._serialize_todo(todo)
         )
 
     def delete_todo(self, todo_id: int):
-        todo = Todo.objects.filter(id=todo_id).first()
-        if not todo:
-            return ResponseUtils.error(
+        deleted = Todo.delete_one(todo_id)
+
+        if not deleted:
+            return Utils.error_response(
                 message="Todo not found",
-                status_code=status.HTTP_404_NOT_FOUND
+                error="INVALID_ID"
             )
 
-        todo.delete()
-
-        return ResponseUtils.success(
-            message=self.data_deleted,
-            status_code=status.HTTP_200_OK
+        return Utils.success_response(
+            message=self.data_deleted
         )
+
+    # -------- INTERNAL SERIALIZER --------
+    @staticmethod
+    def _serialize_todo(todo):
+        return {
+            "id": todo.id,
+            "title": todo.title,
+            "description": todo.description,
+            "completed": todo.completed,
+            "created_at": todo.created_at,
+        }
