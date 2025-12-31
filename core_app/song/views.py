@@ -1,9 +1,10 @@
 from typing import Optional
-from rest_framework import status
+from rest_framework.response import Response
 
 from .model import Song
 from .dataclass.song_dto import SongData
 from core_app.common.utils import Utils
+from core_app.song.serializer.response.song_response import SongResponseSerializer
 
 
 class SongView:
@@ -21,9 +22,11 @@ class SongView:
             release_date=song_data.release_date
         )
 
-        return Utils.success_response(
-            message=self.song_created,
-            data=self._serialize_song(song)
+        return Response(
+            Utils.success_response(
+                message=self.song_created,
+                data=self._serialize_song(song)
+            )
         )
 
     def get_song(self, song_id: Optional[int] = None, params=None):
@@ -31,14 +34,18 @@ class SongView:
         if song_id:
             song = Song.get_one(song_id)
             if not song:
-                return Utils.error_response(
-                    message="Song not found",
-                    error="INVALID_ID"
+                return Response(
+                    Utils.error_response(
+                        message="Song not found",
+                        error="INVALID_ID"
+                    )
                 )
 
-            return Utils.success_response(
-                message="Song fetched successfully",
-                data=[self._serialize_song(song)]
+            return Response(
+                Utils.success_response(
+                    message="Song fetched successfully",
+                    data=[self._serialize_song(song)]
+                )
             )
 
         # -------- GET ALL (PAGINATED) --------
@@ -49,52 +56,54 @@ class SongView:
         page_num = int(params.get("page_num", 1)) if params else 1
         limit = int(params.get("limit", 10)) if params else 10
 
-        return Utils.success_response(
-            message="Songs fetched successfully",
-            data=data,
-            meta={
-                "total": total,
-                "page_num": page_num,
-                "limit": limit
-            }
+        return Response(
+            Utils.success_response(
+                message="Songs fetched successfully",
+                data=data,
+                meta={
+                    "total": total,
+                    "page_num": page_num,
+                    "limit": limit
+                }
+            )
         )
 
     def update_song(self, song_id: int, params):
         song = Song.update_song(song_id, **params)
 
         if not song:
-            return Utils.error_response(
-                message="Song not found",
-                error="INVALID_ID"
+            return Response(
+                Utils.error_response(
+                    message="Song not found",
+                    error="INVALID_ID"
+                )
             )
 
-        return Utils.success_response(
-            message=self.song_updated,
-            data=self._serialize_song(song)
+        return Response(
+            Utils.success_response(
+                message=self.song_updated,
+                data=self._serialize_song(song)
+            )
         )
 
     def delete_song(self, song_id: int):
         deleted = Song.delete_one(song_id)
 
         if not deleted:
-            return Utils.error_response(
-                message="Song not found",
-                error="INVALID_ID"
+            return Response(
+                Utils.error_response(
+                    message="Song not found",
+                    error="INVALID_ID"
+                )
             )
 
-        return Utils.success_response(
-            message=self.song_deleted
+        return Response(
+            Utils.success_response(
+                message=self.song_deleted
+            )
         )
 
     # -------- SERIALIZER --------
     @staticmethod
     def _serialize_song(song):
-        return {
-            "id": song.id,
-            "title": song.title,
-            "artist": song.artist,
-            "duration": song.duration,
-            "release_date": song.release_date,
-            "is_active": song.is_active,
-            "created_at": song.created_at
-        }
+        return SongResponseSerializer(song).data

@@ -1,6 +1,5 @@
 from rest_framework.decorators import api_view
 from rest_framework.request import Request
-from rest_framework.response import Response
 
 from core_app.song.views import SongView
 from core_app.song.serializer.request.create import SongCreateRequestSerializer
@@ -17,22 +16,19 @@ class SongController:
     def create(request: Request):
         serializer = SongCreateRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        result = SongController.view.create_song(serializer.validated_data)
-        return Response(result)
+        return SongController.view.create_song(serializer.validated_data)
 
     @staticmethod
     @api_view(["GET"])
     def get_all(request: Request):
-        result = SongController.view.get_song(params=request.query_params)
-        return Response(result)
+        return SongController.view.get_song(params=request.query_params)
 
     @staticmethod
     @api_view(["GET"])
     def get_one(request: Request):
         serializer = IdRequestSerializer(data=request.query_params)
         serializer.is_valid(raise_exception=True)
-        result = SongController.view.get_song(serializer.validated_data["id"])
-        return Response(result)
+        return SongController.view.get_song(serializer.validated_data["id"])
 
     @staticmethod
     @api_view(["PUT"])
@@ -43,16 +39,14 @@ class SongController:
         serializer = SongUpdateRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        result = SongController.view.update_song(
+        return SongController.view.update_song(
             id_serializer.validated_data["id"],
             serializer.validated_data
         )
-        return Response(result)
 
     @staticmethod
     @api_view(["DELETE"])
     def delete(request: Request):
         serializer = IdRequestSerializer(data=request.query_params)
         serializer.is_valid(raise_exception=True)
-        result = SongController.view.delete_song(serializer.validated_data["id"])
-        return Response(result)
+        return SongController.view.delete_song(serializer.validated_data["id"])
