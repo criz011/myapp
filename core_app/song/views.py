@@ -5,6 +5,7 @@ from .model import Song
 from .dataclass.song_dto import SongData
 from core_app.common.utils import Utils
 from core_app.song.serializer.response.song_response import SongResponseSerializer
+from core_app.artist.model.artist import Artist
 
 
 class SongView:
@@ -16,11 +17,20 @@ class SongView:
     def create_song(self, params):
         song_data = SongData(**params)
 
+        artist = Artist.get_one(song_data.artist_id)
+        if not artist:
+            return Response(
+                Utils.error_response(
+                    message="Artist not found",
+                    error="INVALID_ARTIST"
+                )
+            )
+
         song = Song.create_song(
             title=song_data.title,
-            artist=song_data.artist,
             duration=song_data.duration,
-            release_date=song_data.release_date
+            release_date=song_data.release_date,
+            artist=artist
         )
 
         return Response(

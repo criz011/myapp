@@ -47,6 +47,7 @@ INSTALLED_APPS = [
 
     'core_app.todo.apps.TodoConfig',
     'core_app.song.apps.SongConfig',
+    'core_app.artist.apps.ArtistConfig'
 ]
 
 

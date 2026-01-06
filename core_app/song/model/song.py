@@ -1,11 +1,17 @@
 from django.db import models
-
+from core_app.artist.model.artist import Artist
 
 class Song(models.Model):
     title = models.CharField(max_length=255)
-    artist = models.CharField(max_length=255)
-    duration = models.PositiveIntegerField(help_text="Duration in seconds")
+    duration = models.IntegerField()
     release_date = models.DateField()
+
+    artist = models.ForeignKey(
+        Artist,
+        on_delete=models.PROTECT,
+        related_name="songs"
+    )
+
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
