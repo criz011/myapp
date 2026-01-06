@@ -2,8 +2,12 @@ from rest_framework.decorators import api_view
 from rest_framework.request import Request
 
 from core_app.song.views import SongView
+from core_app.common.decorators.validate_serializer import validate_serializer
+
 from core_app.song.serializer.request.create import SongCreateRequestSerializer
 from core_app.song.serializer.request.update import SongUpdateRequestSerializer
+from core_app.song.serializer.request.get_all import SongGetAllRequestSerializer
+from core_app.song.serializer.request.get_one import SongGetOneRequestSerializer
 from core_app.common.serializer.id_request import IdRequestSerializer
 
 
@@ -13,40 +17,31 @@ class SongController:
 
     @staticmethod
     @api_view(["POST"])
-    def create(request: Request):
-        serializer = SongCreateRequestSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        return SongController.view.create_song(serializer.validated_data)
+    @validate_serializer(SongCreateRequestSerializer)
+    def create(request, params):
+        return SongController.view.create_song(params)
 
     @staticmethod
     @api_view(["GET"])
-    def get_all(request: Request):
-        return SongController.view.get_song(params=request.query_params)
+    @validate_serializer(SongGetAllRequestSerializer, source="query")
+    def get_all(request, params):
+        return SongController.view.get_all(params)
 
     @staticmethod
     @api_view(["GET"])
-    def get_one(request: Request):
-        serializer = IdRequestSerializer(data=request.query_params)
-        serializer.is_valid(raise_exception=True)
-        return SongController.view.get_song(serializer.validated_data["id"])
+    @validate_serializer(SongGetOneRequestSerializer, source="query")
+    def get_one(request, params):
+        return SongController.view.get_one(params["id"])
 
     @staticmethod
     @api_view(["PUT"])
-    def update(request: Request):
-        id_serializer = IdRequestSerializer(data=request.data)
-        id_serializer.is_valid(raise_exception=True)
-
-        serializer = SongUpdateRequestSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        return SongController.view.update_song(
-            id_serializer.validated_data["id"],
-            serializer.validated_data
-        )
+    @validate_serializer(IdRequestSerializer)
+    @validate_serializer(SongUpdateRequestSerializer)
+    def update(request, update_params, id_params):
+        return SongController.view.update_song(id_params["id"],update_params)
 
     @staticmethod
     @api_view(["DELETE"])
-    def delete(request: Request):
-        serializer = IdRequestSerializer(data=request.query_params)
-        serializer.is_valid(raise_exception=True)
-        return SongController.view.delete_song(serializer.validated_data["id"])
+    @validate_serializer(IdRequestSerializer, source="query")
+    def delete(request, params):
+        return SongController.view.delete_song(params["id"])
